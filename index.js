@@ -6,7 +6,7 @@ const pitch_type = require('./pitch_type');
 const bodyParser = require('body-parser');
 
 const TIMEOUT_BETWEEN_EPOCHS_MS = 500;
-const PORT = 8001;
+const PORT = 8001 || process.env.PORT;
 
 async function train() {
     let numTrainingIterations = 10;
