@@ -1,0 +1,73 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Pitch Training Accuracy</title>
+  </head>
+  <body>
+    <h3 id="waiting-msg">Waiting for server...</h3>
+    <p>
+    <span style="font-size:16px" id="trainingStatus"></span>
+    <p>
+    <div id="predictContainer" style="font-size:16px;display:none">
+      Sensor data: <span id="predictSample"></span>
+      <button style="font-size:18px;padding:5px;margin-right:10px" id="predict-button">Predict Pitch</button><p>
+      Predicted Pitch Type: <span style="font-weight:bold" id="predictResult"></span>
+    </div>
+    <script type="module">
+      import { io } from "https://cdn.socket.io/4.7.5/socket.io.esm.min.js";
+    </script>
+    <script>
+const predictContainer = document.getElementById('predictContainer');
+const predictButton = document.getElementById('predict-button');
+
+const socket =
+    io('http://localhost:8001',
+       {reconnectionDelay: 300, reconnectionDelayMax: 300});
+
+const testSample = [2.668,-114.333,-1.908,4.786,25.707,-45.21,78,0]; // Curveball
+
+predictButton.onclick = () => {
+  predictButton.disabled = true;
+  socket.emit('predictSample', testSample);
+};
+
+// functions to handle socket events
+socket.on('connect', () => {
+    document.getElementById('waiting-msg').style.display = 'none';
+    document.getElementById('trainingStatus').innerHTML = 'Training in Progress';
+});
+
+socket.on('trainingComplete', () => {
+  document.getElementById('trainingStatus').innerHTML = 'Training Complete';
+  document.getElementById('predictSample').innerHTML = '[' + testSample.join(', ') + ']';
+  predictContainer.style.display = 'block';
+});
+
+socket.on('predictResult', (result) => {
+  plotPredictResult(result);
+});
+
+socket.on('disconnect', () => {
+  document.getElementById('trainingStatus').innerHTML = '';
+  predictContainer.style.display = 'none';
+  document.getElementById('waiting-msg').style.display = 'block';
+});
+
+function plotPredictResult(result) {
+  predictButton.disabled = false;
+  document.getElementById('predictResult').innerHTML = result;
+  console.log(result);
+}
+    </script>
+    <style>
+      html,
+      body {
+        font-family: Roboto, sans-serif;
+        color: #5f6368;
+      }
+      body {
+        background-color: rgb(248, 249, 250);
+      }
+    </style>
+  </body>
+</html>
